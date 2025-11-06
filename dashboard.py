@@ -54,7 +54,7 @@ all_regions = sorted(df['RegionName'].unique())
 st.sidebar.header("Filter & Select Region")
 
 # 1. Region Dropdown
-default_region = 'London' if 'London' in all_regions else (all_regions[0] if all_regions else 'No Region')
+default_region = 'Nottinghamshire' if 'Nottinghamshire' in all_regions else (all_regions[0] if all_regions else 'No Region')
 selected_region = st.sidebar.selectbox(
     "Select Region to Analyse:",
     options=all_regions,
