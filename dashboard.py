@@ -46,12 +46,12 @@ except Exception as e:
     st.stop()
 
 
-# --- Sidebar (Navigation Bar) for Filtering ---
+# --- Sidebar (Navigation Tab) for Filtering ---
 
 # Get unique regions for the dropdown
 all_regions = sorted(df['RegionName'].unique())
 
-st.sidebar.header("Filter - Select Region & ")
+st.sidebar.header("Navigation Tab: Filter by region")
 st.sidebar.subheader("Afternoon Amber")
 # 1. Region Dropdown
 default_region = 'Nottinghamshire' if 'Nottinghamshire' in all_regions else (all_regions[0] if all_regions else 'No Region')
