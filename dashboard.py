@@ -104,8 +104,8 @@ latest_data_row = latest_data_rows.iloc[0]
 
 # --- Main Dashboard Content ---
 
-st.title(f"🏠 UK House Price Index Dashboard for {selected_region}")
-st.markdown("Analysis based on selected region and time period from the sidebar.")
+st.title(f"UK Housing Price Index {selected_region}")
+st.markdown("This is the historic price change over time up to June 2025")
 
 # Split the main content into three columns
 # [2, 1.5, 1] means the first column is widest, the second is medium, and the third (metrics) is narrowest
@@ -113,7 +113,7 @@ col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
 
 # --- Column 1: Average Price Time Series Chart ---
 with col_viz_1:
-    st.subheader("1. Price Trend Over Time")
+    st.subheader("Price Trend Over Time")
     
     fig_price = px.line(
         filtered_df.dropna(subset=['AveragePrice']), # Drop NaNs for cleaner line plot
@@ -129,7 +129,7 @@ with col_viz_1:
 
 # --- Column 2: House Type Prices Bar Chart ---
 with col_viz_2:
-    st.subheader("2. House Type Prices")
+    st.subheader("House type prices over time")
 
     # Create a DataFrame for the latest month's house type prices
     house_type_prices = {
@@ -160,7 +160,7 @@ with col_viz_2:
 
 # --- Column 3: Key Metrics (Avg Price, 12m Change, FTB Metrics) ---
 with col_metrics_3:
-    st.subheader("3. Key Price Metrics")
+    st.subheader("First Time Buyer Key Price Metrics")
     st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
     st.markdown("---")
 
