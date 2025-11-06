@@ -104,7 +104,7 @@ latest_data_row = latest_data_rows.iloc[0]
 
 # --- Main Dashboard Content ---
 
-st.title(f"UK Housing Price Index {selected_region}")
+st.title(f"HomeAgent Dashboard Home {selected_region}")
 st.markdown("This is the historic price change over time up to June 2025")
 
 # Split the main content into three columns
