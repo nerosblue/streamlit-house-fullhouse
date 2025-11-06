@@ -52,7 +52,7 @@ except Exception as e:
 all_regions = sorted(df['RegionName'].unique())
 
 st.sidebar.header("Filter - Select Region & ")
-
+st.sidebar.subheader("Afternoon Amber")
 # 1. Region Dropdown
 default_region = 'Nottinghamshire' if 'Nottinghamshire' in all_regions else (all_regions[0] if all_regions else 'No Region')
 selected_region = st.sidebar.selectbox(
@@ -85,7 +85,8 @@ else:
 # --- Data Filtering ---
 filtered_df = df[
     (df['RegionName'] == selected_region) &
-    (df['Date'] >= start_date) 
+    (df['Date'] >= start_date) &
+    (df['Date'] <= end_date)
 ].sort_values(by='Date')
 
 # Filter for the latest month's data in the selected period for bar charts/metrics
