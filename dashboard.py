@@ -149,4 +149,4 @@ if not metric_df.empty:
         else:
             col3.metric(label="Total Price Change", value="Insufficient Price Data")
     else:
-        col3.metric(label="Total Price Change", value="N/A (Need more data points
+        col3.metric(label="Total Price Change", value="N/A (Need more data points)")
