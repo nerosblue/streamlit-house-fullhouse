@@ -1,49 +1,69 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from datetime import date
+import datetime
 
-# Set up the Streamlit page configuration
+# --- 1. Page Configuration ---
 st.set_page_config(
     page_title="UK House Price Index Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 1. DEFINE REGION HIERARCHY ---
-# Since the CSV is flat, we map parents (Counties/Regions) to children (Cities/Districts) manually.
-# You can expand this list.
-REGION_HIERARCHY = {
+# --- 2. Region Hierarchy Mapping ---
+# Since the CSV is "flat" (doesn't say which city is in which county), 
+# we define the groups manually here.
+REGION_MAPPING = {
     "Nottinghamshire": [
-        "Nottingham", "Rushcliffe", "Broxtowe", "Gedling", 
-        "Newark and Sherwood", "Mansfield", "Ashfield", "Bassetlaw", 
-        "Nottinghamshire" # Include the county average itself
+        "Nottingham", "Ashfield", "Bassetlaw", "Broxtowe", "Gedling", 
+        "Mansfield", "Newark and Sherwood", "Rushcliffe", "Nottinghamshire"
     ],
     "Derbyshire": [
-        "Derby", "Amber Valley", "Bolsover", "Chesterfield", 
-        "Derbyshire Dales", "Erewash", "High Peak", 
-        "North East Derbyshire", "South Derbyshire"
+        "Derby", "Amber Valley", "Bolsover", "Chesterfield", "Derbyshire Dales", 
+        "Erewash", "High Peak", "North East Derbyshire", "South Derbyshire", "Derbyshire"
     ],
     "London": [
-        "London", "Barking and Dagenham", "Barnet", "Bexley", "Brent", 
-        "Bromley", "Camden", "City of London", "Croydon", "Ealing", 
-        "Enfield", "Greenwich", "Hackney", "Hammersmith and Fulham", 
-        "Haringey", "Harrow", "Havering", "Hillingdon", "Hounslow", 
-        "Islington", "Kensington and Chelsea", "Kingston upon Thames", 
-        "Lambeth", "Lewisham", "Merton", "Newham", "Redbridge", 
-        "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", 
+        "London", "Barking and Dagenham", "Barnet", "Bexley", "Brent", "Bromley", 
+        "Camden", "City of London", "Croydon", "Ealing", "Enfield", "Greenwich", 
+        "Hackney", "Hammersmith and Fulham", "Haringey", "Harrow", "Havering", 
+        "Hillingdon", "Hounslow", "Islington", "Kensington and Chelsea", 
+        "Kingston upon Thames", "Lambeth", "Lewisham", "Merton", "Newham", 
+        "Redbridge", "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", 
         "Waltham Forest", "Wandsworth", "Westminster"
     ],
-    "All Data": [] # Fallback to show everything if needed
+    "Greater Manchester": [
+        "Manchester", "Bolton", "Bury", "Oldham", "Rochdale", "Salford", 
+        "Stockport", "Tameside", "Trafford", "Wigan", "Greater Manchester"
+    ],
+    "West Midlands": [
+        "Birmingham", "Coventry", "Dudley", "Sandwell", "Solihull", "Walsall", 
+        "Wolverhampton", "West Midlands"
+    ],
+    "West Yorkshire": [
+        "Leeds", "Bradford", "Calderdale", "Kirklees", "Wakefield", "West Yorkshire"
+    ],
+    "Merseyside": [
+        "Liverpool", "Knowsley", "St Helens", "Sefton", "Wirral", "Merseyside"
+    ],
+    "South Yorkshire": [
+        "Sheffield", "Barnsley", "Doncaster", "Rotherham", "South Yorkshire"
+    ],
+    "Tyne and Wear": [
+        "Newcastle upon Tyne", "Gateshead", "North Tyneside", "South Tyneside", "Sunderland", "Tyne and Wear"
+    ],
+    "Surrey": [
+        "Elmbridge", "Epsom and Ewell", "Guildford", "Mole Valley", "Reigate and Banstead", 
+        "Runnymede", "Spelthorne", "Surrey Heath", "Tandridge", "Waverley", "Woking", "Surrey"
+    ],
+    # This key allows users to find ANY region if it's not in the groups above
+    "All Regions (A-Z)": [] 
 }
 
-# --- Data Loading and Preprocessing ---
-
+# --- 3. Data Loading ---
 @st.cache_data
 def load_data():
     """Loads and preprocesses the UK HPI data."""
-    # Load the CSV file (Make sure this matches your actual filename)
+    # Load the new CSV file
     df = pd.read_csv("UK-HPI-full-Shorted 2.csv")
 
     # Convert Date column
@@ -59,9 +79,9 @@ def load_data():
         'FTBPrice', 'FTBIndex', 'FTB12m%Change'
     ]
     for col in numeric_cols:
-        # Clean up any non-numeric characters if they exist
-        if df[col].dtype == 'object':
-             df[col] = df[col].astype(str).str.replace(',', '', regex=False)
+        # Remove commas if present in strings before converting
+        if df[col].dtype == object:
+            df[col] = df[col].astype(str).str.replace(',', '')
         df[col] = pd.to_numeric(df[col], errors='coerce')
     
     return df
@@ -69,52 +89,46 @@ def load_data():
 data_load_state = st.text('Loading data...')
 try:
     df = load_data()
-    data_load_state.success('Data loaded and processed successfully.')
+    data_load_state.success('Data loaded successfully.')
 except Exception as e:
     data_load_state.error(f"Error loading data: {e}")
     st.stop()
 
 
-# --- Sidebar (Navigation Tab) for Filtering ---
+# --- 4. Sidebar Navigation Logic ---
 
-st.sidebar.header("Navigation Tab")
-st.sidebar.subheader("Location Selection")
+st.sidebar.header("Navigation")
+st.sidebar.subheader("Select Location")
 
-# 1. Select Parent Region (e.g., Nottinghamshire)
-# We use the keys from our dictionary
-parent_regions = list(REGION_HIERARCHY.keys())
-# Remove 'All Data' from the top list to put it at the end or treat differently if desired
-if "All Data" in parent_regions:
-    parent_regions.remove("All Data")
-    parent_regions.sort()
-    parent_regions.append("All Data") # Add back at end
+# -- Step 1: Choose the Parent Region (e.g., Nottinghamshire) --
+parent_options = list(REGION_MAPPING.keys())
+selected_parent = st.sidebar.selectbox("1. Select Region/County:", parent_options, index=0)
 
-selected_parent = st.sidebar.selectbox(
-    "1. Select Region / County:",
-    options=parent_regions,
-    index=parent_regions.index("Nottinghamshire") if "Nottinghamshire" in parent_regions else 0
-)
-
-# 2. Select Specific City/District based on Parent
-if selected_parent == "All Data":
-    # If "All Data" selected, show ALL unique regions in the CSV
-    available_cities = sorted(df['RegionName'].unique())
+# -- Step 2: Choose the City/District based on Step 1 --
+if selected_parent == "All Regions (A-Z)":
+    # If they want to see everything, show all unique regions from the DataFrame
+    available_sub_regions = sorted(df['RegionName'].unique())
 else:
-    # Otherwise, use the list from our Dictionary
-    available_cities = sorted(REGION_HIERARCHY[selected_parent])
+    # Otherwise, grab the specific list from our dictionary
+    # We also filter this list to ensure these names actually exist in the CSV to prevent errors
+    mapped_names = REGION_MAPPING[selected_parent]
+    available_sub_regions = [name for name in mapped_names if name in df['RegionName'].unique()]
+    
+    # If our mapping has names that aren't in the CSV, warn the user (optional debugging)
+    if not available_sub_regions:
+        st.sidebar.warning(f"No data found matching the hierarchy for {selected_parent}. Try 'All Regions'.")
+        available_sub_regions = sorted(df['RegionName'].unique())
 
-selected_region = st.sidebar.selectbox(
-    f"2. Select City in {selected_parent}:",
-    options=available_cities
-)
+selected_region = st.sidebar.selectbox(f"2. Select City/District in {selected_parent}:", available_sub_regions)
 
-# 3. Time Period Selection (Date Range)
+
+# --- 5. Date Filtering ---
 st.sidebar.subheader("Time Period")
 min_date = df['Date'].min().date()
 max_date = df['Date'].max().date()
 
 date_range = st.sidebar.date_input(
-    "Select Dates:",
+    "Select Date Range:",
     value=(min_date, max_date),
     min_value=min_date,
     max_value=max_date
@@ -127,135 +141,93 @@ else:
     start_date = pd.to_datetime(min_date)
     end_date = pd.to_datetime(max_date)
 
-# --- Data Filtering ---
-# We filter by 'selected_region' which is the specific city/district selected in dropdown #2
+
+# --- 6. Data Processing for Dashboard ---
 filtered_df = df[
     (df['RegionName'] == selected_region) &
     (df['Date'] >= start_date) &
     (df['Date'] <= end_date)
 ].sort_values(by='Date')
 
-# Check if data exists for this selection
+# Check if data exists
 if filtered_df.empty:
-    st.error(f"No data found for **{selected_region}**. It might be named differently in the CSV file.")
+    st.error(f"No data available for **{selected_region}** in the selected dates.")
     st.stop()
 
+# Get Latest Data
 latest_date = filtered_df['Date'].max()
-latest_data_rows = filtered_df[filtered_df['Date'] == latest_date]
-
-if latest_data_rows.empty:
-    st.error(f"No data available for **{selected_region}** in the selected time period.")
-    st.stop()
-
-latest_data_row = latest_data_rows.iloc[0]
+latest_data_row = filtered_df[filtered_df['Date'] == latest_date].iloc[0]
 
 
-# --- Main Dashboard Content ---
+# --- 7. Dashboard Layout ---
 
 st.title(f"HomeAgent Dashboard: {selected_region}")
-st.caption(f"Region Group: {selected_parent}")
-st.markdown("This is the historic price change over time up to June 2025")
+st.markdown(f"Historic price change for **{selected_region}** (Part of {selected_parent})")
 
-# Split columns
 col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
 
-# --- Column 1: Average Price Time Series Chart ---
+# --- CHART 1: Line Graph ---
 with col_viz_1:
     st.subheader("Price Trend Over Time")
-    
     fig_price = px.line(
         filtered_df.dropna(subset=['AveragePrice']), 
-        x='Date',
+        x='Date', 
         y='AveragePrice',
-        title=f'Average House Price Trend',
-        labels={'AveragePrice': 'Average Price (£)', 'Date': 'Date'},
+        labels={'AveragePrice': 'Avg Price (£)'},
         template="plotly_white"
     )
     fig_price.update_yaxes(tickprefix='£')
-    fig_price.update_layout(hovermode="x unified", title_font_size=16)
+    fig_price.update_layout(hovermode="x unified", margin=dict(l=0, r=0, t=30, b=0))
     st.plotly_chart(fig_price, use_container_width=True)
 
-# --- Column 2: House Type Prices Bar Chart ---
+# --- CHART 2: Bar Chart (Types) ---
 with col_viz_2:
-    st.subheader("Prices by Type")
-
-    house_type_prices = {
-        'House Type': ['Semi-Detached', 'Terraced', 'Flat'],
+    st.subheader("Prices by Property Type")
+    
+    # Safely getting values (handling cases where columns might be missing)
+    type_data = {
+        'Type': ['Semi-Detached', 'Terraced', 'Flat'],
         'Price': [
-            latest_data_row.get('SemiDetachedPrice', None),
-            latest_data_row.get('TerracedPrice', None),
+            latest_data_row.get('SemiDetachedPrice', None), 
+            latest_data_row.get('TerracedPrice', None), 
             latest_data_row.get('FlatPrice', None)
         ]
     }
-    df_house_types = pd.DataFrame(house_type_prices).dropna(subset=['Price'])
-
-    if not df_house_types.empty:
+    df_types = pd.DataFrame(type_data).dropna()
+    
+    if not df_types.empty:
         fig_types = px.bar(
-            df_house_types,
-            x='House Type',
-            y='Price',
-            title=f'Avg. Price ({latest_date.strftime("%b %Y")})',
-            labels={'Price': 'Average Price (£)'},
-            color='House Type',
-            template="plotly_white",
+            df_types, x='Type', y='Price', color='Type',
+            title=f"Prices as of {latest_date.strftime('%b %Y')}",
+            template="plotly_white"
         )
         fig_types.update_yaxes(tickprefix='£')
-        fig_types.update_layout(showlegend=False, title_font_size=16)
+        fig_types.update_layout(showlegend=False, margin=dict(l=0, r=0, t=40, b=0))
         st.plotly_chart(fig_types, use_container_width=True)
     else:
-        st.info("House type data (Semi, Terraced, Flat) is not available for this specific selection.")
+        st.info("Property type breakdown not available.")
 
-# --- Column 3: Key Metrics ---
+# --- METRICS ---
 with col_metrics_3:
     st.subheader("Key Metrics")
-    st.markdown(f"**{latest_date.strftime('%B %Y')}**")
-    st.markdown("---")
+    st.write(f"**Data: {latest_date.strftime('%B %Y')}**")
+    st.divider()
 
-    # Metric 1: Average Price
-    latest_price = latest_data_row['AveragePrice']
-    if not pd.isna(latest_price):
-        st.metric(
-            label="Avg Price (All)",
-            value=f"£{latest_price:,.0f}"
-        )
-    else:
-         st.metric(label="Avg Price (All)", value="N/A")
+    # Helper to display metrics safely
+    def safe_metric(label, val, suffix="", is_percent=False):
+        if pd.isna(val):
+            st.metric(label, "N/A")
+        else:
+            if is_percent:
+                st.metric(label, f"{val:.1f}%", delta=f"{val:.1f}%", delta_color="normal" if val < 0 else "inverse")
+            else:
+                st.metric(label, f"£{val:,.0f}")
 
-    # Metric 2: 12m Change
-    annual_change = latest_data_row['12m%Change']
-    if not pd.isna(annual_change):
-        st.metric(
-            label="Annual Change",
-            value=f"{annual_change:.1f}%",
-            delta=f"{annual_change:.1f}%",
-            delta_color="normal" if annual_change < 0 else "inverse" 
-        )
-    else:
-        st.metric(label="Annual Change", value="N/A")
+    safe_metric("Average Price", latest_data_row.get('AveragePrice'))
+    safe_metric("12m Change", latest_data_row.get('12m%Change'), is_percent=True)
+    
+    st.write("### FTB Stats")
+    safe_metric("FTB Price", latest_data_row.get('FTBPrice'))
+    safe_metric("FTB 12m Change", latest_data_row.get('FTB12m%Change'), is_percent=True)
 
-    st.markdown("### FTB Metrics")
-    st.markdown("---")
-
-    # Metric 3: FTB Price
-    ftb_price = latest_data_row.get('FTBPrice', None)
-    if not pd.isna(ftb_price):
-        st.metric(
-            label="First Time Buyer Price",
-            value=f"£{ftb_price:,.0f}"
-        )
-    else:
-        st.metric(label="FTB Price", value="N/A")
-        
-    # Metric 4: FTB Annual Change
-    ftb_annual_change = latest_data_row.get('FTB12m%Change', None)
-    if not pd.isna(ftb_annual_change):
-        st.metric(
-            label="FTB Annual Change",
-            value=f"{ftb_annual_change:.1f}%",
-            delta=f"{ftb_annual_change:.1f}%",
-            delta_color="normal" if ftb_annual_change < 0 else "inverse" 
-        )
-    else:
-        st.metric(label="FTB Annual Change", value="N/A")
-
-st.markdown("---")
+st.divider()
