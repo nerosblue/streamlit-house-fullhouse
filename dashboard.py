@@ -18,17 +18,10 @@ st.set_page_config(
 def load_data():
     """Loads and preprocesses the UK HPI data."""
     df = pd.read_csv("UK-HPI-full-Shorted 2.csv")
-
-
-
     # Date into datetime objects and 'coerce' for errors to turn invalid dates into NaT
 
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
-
-    
-
     # Drop rows where Date or RegionName is missing
-
     df = df.dropna(subset=['Date', 'RegionName'])
 
 
@@ -38,35 +31,23 @@ def load_data():
     numeric_cols = [
 
         'AveragePrice', '12m%Change', 
-
         'SemiDetachedPrice', 'TerracedPrice', 'FlatPrice', 
 
         'FTBPrice', 'FTBIndex', 'FTB12m%Change'
-
     ]
 
     for col in numeric_cols:
-
         df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    
-
     return df
-
-
 
 data_load_state = st.text('Loading data...')
 
 try:
-
     df = load_data()
-
     data_load_state.success('Data loaded and processed successfully.')
 
 except Exception as e:
-
     data_load_state.error(f"Error loading data: {e}")
-
     st.stop()
 
 
@@ -74,31 +55,18 @@ except Exception as e:
 
 
 # --- Sidebar (Navigation Tab) for Filtering ---
-
-
-
 # Get unique regions for the dropdown
 
 all_regions = sorted(df['RegionName'].unique())
-
-
-
 st.sidebar.header("Navigation Tab: Filter by region")
-
 st.sidebar.subheader("Afternoon Amber")
 
 # 1. Region Dropdown
-
 default_region = 'Nottinghamshire' if 'Nottinghamshire' in all_regions else (all_regions[0] if all_regions else 'No Region')
-
 selected_region = st.sidebar.selectbox(
-
     "Select Region to Analyse:",
-
     options=all_regions,
-
     index=all_regions.index(default_region) if default_region in all_regions else 0
-
 )
 
 
@@ -106,41 +74,23 @@ selected_region = st.sidebar.selectbox(
 # 2. Time Period Selection (Date Range)
 
 min_date = df['Date'].min().date()
-
 max_date = df['Date'].max().date()
-
-
-
 # Note: st.date_input behavior is typically to drop downwards by default.
-
 date_range = st.sidebar.date_input(
-
     "Select Time Period:",
-
     value=(min_date, max_date),
-
     min_value=min_date,
-
     max_value=max_date
 
 )
 
-
-
 # Ensure date_range has two elements (start and end date)
-
 if len(date_range) == 2:
-
     start_date = pd.to_datetime(date_range[0])
-
     end_date = pd.to_datetime(date_range[1])
-
 else:
-
     # Fallback if the user only selected one date
-
     start_date = pd.to_datetime(min_date)
-
     end_date = pd.to_datetime(max_date)
 
 
@@ -148,37 +98,26 @@ else:
 # --- Data Filtering ---
 
 filtered_df = df[
-
     (df['RegionName'] == selected_region) &
-
     (df['Date'] >= start_date) &
-
     (df['Date'] <= end_date)
-
 ].sort_values(by='Date')
 
 
 
-# Filter for the latest month's data in the selected period for bar charts/metrics
+# latest data when opened
 
 latest_date = filtered_df['Date'].max()
-
-# Ensure we have data for the latest date before proceeding
-
 latest_data_rows = filtered_df[filtered_df['Date'] == latest_date]
 
-
-
+#empty cells -- what to do with this?
 if filtered_df.empty or latest_data_rows.empty:
-
     st.error(f"No data available for **{selected_region}** in the selected time period.")
-
     st.stop()
 
 
 
-# We take the first row of the latest data (should only be one per date/region)
-
+# first row of the latest data (should only be one per date/region)
 latest_data_row = latest_data_rows.iloc[0]
 
 
@@ -186,18 +125,12 @@ latest_data_row = latest_data_rows.iloc[0]
 
 
 # --- Main Dashboard Content ---
-
-
-
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
-
 st.markdown("This is the historic price change over time up to June 2025")
 
 
 
-# Split the main content into three columns
-
-# [2, 1.5, 1] means the first column is widest, the second is medium, and the third (metrics) is narrowest
+# three columns
 
 col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
 
