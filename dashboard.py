@@ -55,6 +55,10 @@ all_regions = sorted(df['RegionName'].unique())
 st.sidebar.header("Navigation Tab - Filter by region")
 st.sidebar.subheader("Morning Davida")
 
+# 2. Time Period Selection
+min_date = df['Date'].min().date()
+max_date = df['Date'].max().date()
+
 # Date input FIRST (higher up = more room below)
 date_range = st.sidebar.date_input(
     "Select Time Period:",
@@ -75,10 +79,6 @@ default_region = (
     'Greater Manchester' if 'Greater Manchester' in all_regions
     else (all_regions[0] if all_regions else 'No Region')
 )
-
-# 2. Time Period Selection
-min_date = df['Date'].min().date()
-max_date = df['Date'].max().date()
 
 
 # Ensure date_range has two elements
