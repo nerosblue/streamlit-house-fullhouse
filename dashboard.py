@@ -6,7 +6,7 @@ from datetime import date
 
 #opening page
 st.set_page_config(
-    page_title="UK House Price Index Dashboard",
+    page_title="Manchester House Price Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -17,7 +17,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     """Loads and preprocesses the UK HPI data."""
-    df = pd.read_csv("UK-HPI-full-Shorted 2.csv")
+    df = pd.read_excel("MCRDatasetFin.xlsx")
     # Date into datetime objects and 'coerce' for errors to turn invalid dates into NaT
 
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
@@ -28,19 +28,18 @@ def load_data():
 
     # Ensure necessary columns are numeric, coercing errors to NaN
 
-    numeric_cols = [
-
-        'AveragePrice', '12m%Change', 
-        'SemiDetachedPrice', 'TerracedPrice', 'FlatPrice', 
-
-        'FTBPrice', 'FTBIndex', 'FTB12m%Change'
-    ]
+numeric_cols = [
+    'AveragePrice',
+    'SemiDetachedPrice', 'TerracedPrice', 'FlatPrice',
+    'FTBPrice',
+    '12m%Change'  # Add this
+]
 
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
 
-data_load_state = st.text('Loading data...')
+data_load_state = st.text('Loading your data...')
 
 try:
     df = load_data()
@@ -58,13 +57,13 @@ except Exception as e:
 # Get unique regions for the dropdown
 
 all_regions = sorted(df['RegionName'].unique())
-st.sidebar.header("Navigation Tab: Filter by region")
-st.sidebar.subheader("Afternoon Amber")
+st.sidebar.header("Navigation Tab - Filter by region")
+st.sidebar.subheader("Morning Davida")
 
 # 1. Region Dropdown
-default_region = 'Nottinghamshire' if 'Nottinghamshire' in all_regions else (all_regions[0] if all_regions else 'No Region')
+default_region = 'Greater Manchester' if 'Greater Manchester' in all_regions else (all_regions[0] if all_regions else 'No Region')
 selected_region = st.sidebar.selectbox(
-    "Select Region to Analyse:",
+    "Select City to Analyse:",
     options=all_regions,
     index=all_regions.index(default_region) if default_region in all_regions else 0
 )
@@ -126,7 +125,7 @@ latest_data_row = latest_data_rows.iloc[0]
 
 # --- Main Dashboard Content ---
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
-st.markdown("This is the historic price change over time up to June 2025")
+st.markdown("This is the historic price change over time up to November 2025")
 
 
 
@@ -320,49 +319,9 @@ with col_metrics_3:
 
 
 
-    # --- Metric 4: FTB Index ---
 
-    ftb_index = latest_data_row['FTBIndex']
 
-    if not pd.isna(ftb_index):
-
-        st.metric(
-
-            label="FTB Index Value",
-
-            value=f"{ftb_index:.1f}"
-
-        )
-
-    else:
-
-        st.metric(label="FTB Index Value", value="N/A")
-
-        
-
-    # --- Metric 5: FTB 12m% Change ---
-
-    ftb_annual_change = latest_data_row['FTB12m%Change']
-
-    if not pd.isna(ftb_annual_change):
-
-        delta_val_ftb = f"{ftb_annual_change:.1f}%"
-
-        st.metric(
-
-            label="FTB Annual Change (12m%)",
-
-            value=f"{ftb_annual_change:.1f}%",
-
-            delta=delta_val_ftb,
-
-            delta_color="normal" if ftb_annual_change < 0 else "inverse" 
-
-        )
-
-    else:
-
-        st.metric(label="FTB Annual Change (12m%)", value="N/A")
+    
 
 
 
