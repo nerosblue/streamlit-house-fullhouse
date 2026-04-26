@@ -242,7 +242,7 @@ def send_message(user_message: str, chat_history: list) -> str:
 
 
 # --- Chat UI ---
-st.title("AI Assistant")
+st.title("Homeagent AI")
 
 # Initialise chat history in session state
 if "messages" not in st.session_state:
