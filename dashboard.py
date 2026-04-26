@@ -37,7 +37,7 @@ numeric_cols = [
 
 for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-return df
+        return df
 
 data_load_state = st.text('Loading your data...')
 
