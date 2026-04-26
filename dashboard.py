@@ -268,3 +268,19 @@ if prompt := st.chat_input("Ask me anything..."):
         st.markdown(reply)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
+
+def send_message(user_message: str, chat_history: list) -> str:
+    payload = {"message": user_message, "history": chat_history}
+    try:
+        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=120)
+        response.raise_for_status()
+        # Handle both plain text and JSON responses
+        try:
+            data = response.json()
+            return data.get("output", "No response received.")
+        except:
+            return response.text
+    except requests.exceptions.Timeout:
+        return "Request timed out. Please try again."
+    except Exception as e:
+        return f"Error: {str(e)}"
