@@ -158,7 +158,6 @@ with col_viz_2:
         st.info("House type data (Semi-Detached, Terraced, Flat) is not available for the latest selected date.")
 
 # at the bottom
-with col_metrics_3:
     st.subheader("First Time Buyer Key Price Metrics")
     st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
     st.markdown("---")
