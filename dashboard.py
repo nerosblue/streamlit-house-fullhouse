@@ -109,7 +109,7 @@ st.title(f"HomeAgent Dashboard Home for {selected_region}")
 st.markdown("This is the historic price change over time up to November 2025")
 
 # Three columns
-col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
+col_viz_1, col_viz_2= st.columns([2, 1.5)
 
 # --- Column 1: Average Price Time Series Chart ---
 with col_viz_1:
@@ -157,7 +157,7 @@ with col_viz_2:
     else:
         st.info("House type data (Semi-Detached, Terraced, Flat) is not available for the latest selected date.")
 
-# --- Column 3: Key Metrics ---
+# at the bottom
 with col_metrics_3:
     st.subheader("First Time Buyer Key Price Metrics")
     st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
