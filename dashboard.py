@@ -30,7 +30,8 @@ def load_data():
         'TerracedPrice',
         'FlatPrice',
         'FTBPrice',
-        '12m%Change'
+        '12m%Change',
+        'SalesVolume'
     ]
 
     for col in numeric_cols:
@@ -108,10 +109,10 @@ latest_data_row = latest_data_rows.iloc[0]
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
 st.markdown("This is the historic price change over time up to November 2025")
 
-# Three columns
-col_viz_1, col_viz_2= st.columns([2, 1.5])
+# --- Row 1: Two Charts ---
+col_viz_1, col_viz_2 = st.columns([2, 1.5])
 
-# --- Column 1: Average Price Time Series Chart ---
+# Column 1: Average Price Time Series Chart
 with col_viz_1:
     st.subheader("Price Trend Over Time")
 
@@ -127,7 +128,7 @@ with col_viz_1:
     fig_price.update_layout(hovermode="x unified", title_font_size=16)
     st.plotly_chart(fig_price, use_container_width=True)
 
-# --- Column 2: House Type Prices Bar Chart ---
+# Column 2: House Type Prices Bar Chart
 with col_viz_2:
     st.subheader("House type prices over time")
 
@@ -157,22 +158,24 @@ with col_viz_2:
     else:
         st.info("House type data (Semi-Detached, Terraced, Flat) is not available for the latest selected date.")
 
-# at the bottom
-    st.subheader("First Time Buyer Key Price Metrics")
-    st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
-    st.markdown("---")
 
-    col_met_1, col_met_2, col_met_2= st.columns([2, 1.5, 1])
-    with col_met_1:
-    # Metric 1: Latest Average Price
+# --- Row 2: Key Metrics ---
+st.subheader("First Time Buyer Key Price Metrics")
+st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
+st.markdown("---")
+
+col_met_1, col_met_2, col_met_3 = st.columns(3)
+
+# Metric 1: Latest Average Price
+with col_met_1:
     latest_price = latest_data_row['AveragePrice']
     if not pd.isna(latest_price):
         st.metric(label="Average Price (All Types)", value=f"£{latest_price:,.0f}")
     else:
         st.metric(label="Average Price (All Types)", value="N/A")
 
-    # Metric 2: Latest 12-Month Change
-    with col_met_2:
+# Metric 2: Latest 12-Month Change
+with col_met_2:
     annual_change = latest_data_row['12m%Change']
     if not pd.isna(annual_change):
         delta_val = f"{annual_change:.1f}%"
@@ -185,21 +188,22 @@ with col_viz_2:
     else:
         st.metric(label="Annual Price Change (12m%)", value="N/A")
 
-    st.markdown("### FTB Metrics")
-    st.markdown("---")
-
-    # Metric 3: First Time Buyer Price
-    with col_met_3:
+# Metric 3: First Time Buyer Price
+with col_met_3:
     ftb_price = latest_data_row['FTBPrice']
     if not pd.isna(ftb_price):
         st.metric(label="Avg. First Time Buyer Price", value=f"£{ftb_price:,.0f}")
     else:
         st.metric(label="Avg. First Time Buyer Price", value="N/A")
 
-# barchart to show monthly sales
+
+# --- Row 3: Sales Volume Bar Chart ---
+st.markdown("---")
+st.subheader("Monthly Sales Volume")
+
 fig_volume = px.bar(
     filtered_df.dropna(subset=['SalesVolume']).assign(
-        Date=filtered_df['Date'].dt.strftime('%b %Y')  # Converts to "Jan 2023" format
+        Date=filtered_df['Date'].dt.strftime('%b %Y')
     ),
     x='Date',
     y='SalesVolume',
@@ -209,8 +213,9 @@ fig_volume = px.bar(
     color='SalesVolume',
     color_continuous_scale='Blues'
 )
-
 st.plotly_chart(fig_volume, use_container_width=True)
+
+
 # --- Footer ---
 st.markdown("---")
 st.caption(f"Showing data for: {selected_region}. Filter the time period using the sidebar.")
