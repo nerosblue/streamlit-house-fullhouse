@@ -223,7 +223,7 @@ st.caption(f"Showing data for: {selected_region}. Filter the time period using t
 
 
 #n8n connection
-N8N_WEBHOOK_URL = "http://localhost:5678/webhook/n8nagent"
+N8N_WEBHOOK_URL = "https://kindred-rupture-onstage.ngrok-free.dev/webhook/n8nagent"
 
 def send_message(user_message: str, chat_history: list) -> str:
     payload = {
