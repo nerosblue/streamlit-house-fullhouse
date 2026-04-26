@@ -274,13 +274,20 @@ def send_message(user_message: str, chat_history: list) -> str:
     try:
         response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=120)
         response.raise_for_status()
-        # Handle both plain text and JSON responses
         try:
             data = response.json()
-            return data.get("output", "No response received.")
+            # Try common field names
+            return (
+                data.get("output") or
+                data.get("text") or
+                data.get("response") or
+                data.get("message") or
+                str(data)
+            )
         except:
             return response.text
     except requests.exceptions.Timeout:
         return "Request timed out. Please try again."
     except Exception as e:
         return f"Error: {str(e)}"
+
