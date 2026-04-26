@@ -162,6 +162,8 @@ with col_viz_2:
     st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
     st.markdown("---")
 
+    col_met_1, col_met_2, col_met_2= st.columns([2, 1.5, 1])
+    with col_met_1:
     # Metric 1: Latest Average Price
     latest_price = latest_data_row['AveragePrice']
     if not pd.isna(latest_price):
@@ -170,6 +172,7 @@ with col_viz_2:
         st.metric(label="Average Price (All Types)", value="N/A")
 
     # Metric 2: Latest 12-Month Change
+    with col_met_2:
     annual_change = latest_data_row['12m%Change']
     if not pd.isna(annual_change):
         delta_val = f"{annual_change:.1f}%"
@@ -186,6 +189,7 @@ with col_viz_2:
     st.markdown("---")
 
     # Metric 3: First Time Buyer Price
+    with col_met_3:
     ftb_price = latest_data_row['FTBPrice']
     if not pd.isna(ftb_price):
         st.metric(label="Avg. First Time Buyer Price", value=f"£{ftb_price:,.0f}")
