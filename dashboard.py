@@ -200,7 +200,9 @@ fig_volume = px.bar(
     y='SalesVolume',
     title='Monthly Sales Volume',
     labels={'SalesVolume': 'Number of Sales', 'Date': 'Date'},
-    template="plotly_white"
+    template="plotly_white",
+    color='SalesVolume',                        # Colour bars by volume value
+    color_continuous_scale='Blues'
 )
 
 st.plotly_chart(fig_volume, use_container_width=True)
