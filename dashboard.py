@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     """Loads and preprocesses the UK HPI data."""
-    df = pd.read_csv("MCRActualFull2026.csv")
+    df = pd.read_excel("MCRDatasetFin.xlsx")
 
     # Convert Date into datetime objects, coerce errors to NaT
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
@@ -55,31 +55,27 @@ all_regions = sorted(df['RegionName'].unique())
 st.sidebar.header("Navigation Tab - Filter by region")
 st.sidebar.subheader("Morning Davida")
 
-# 2. Time Period Selection
-min_date = df['Date'].min().date()
-max_date = df['Date'].max().date()
-
-# Date input FIRST (higher up = more room below)
-date_range = st.sidebar.date_input(
-    "Select Time Period:",
-    value=(min_date, max_date),
-    min_value=min_date,
-    max_value=max_date
+# 1. Region Dropdown
+default_region = (
+    'Greater Manchester' if 'Greater Manchester' in all_regions
+    else (all_regions[0] if all_regions else 'No Region')
 )
-
-# Region dropdown second
 selected_region = st.sidebar.selectbox(
     "Select City to Analyse:",
     options=all_regions,
     index=all_regions.index(default_region) if default_region in all_regions else 0
 )
 
-# 1. Region Dropdown
-default_region = (
-    'Greater Manchester' if 'Greater Manchester' in all_regions
-    else (all_regions[0] if all_regions else 'No Region')
-)
+# 2. Time Period Selection
+min_date = df['Date'].min().date()
+max_date = df['Date'].max().date()
 
+date_range = st.sidebar.date_input(
+    "Select Time Period:",
+    value=(min_date, max_date),
+    min_value=min_date,
+    max_value=max_date
+)
 
 # Ensure date_range has two elements
 if len(date_range) == 2:
@@ -110,7 +106,7 @@ latest_data_row = latest_data_rows.iloc[0]
 
 # --- Main Dashboard Content ---
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
-st.markdown("This is the historic price change over time up to Febuary 2026")
+st.markdown("This is the historic price change over time up to November 2025")
 
 # Three columns
 col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
