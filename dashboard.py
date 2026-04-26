@@ -193,6 +193,7 @@ with col_metrics_3:
     else:
         st.metric(label="Avg. First Time Buyer Price", value="N/A")
 
+# barchart to show monthly sales
 fig_volume = px.bar(
     filtered_df.dropna(subset=['SalesVolume']),
     x='Date',
