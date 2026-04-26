@@ -109,7 +109,7 @@ st.title(f"HomeAgent Dashboard Home for {selected_region}")
 st.markdown("This is the historic price change over time up to November 2025")
 
 # Three columns
-col_viz_1, col_viz_2= st.columns([2, 1.5))
+col_viz_1, col_viz_2= st.columns([2, 1.5])
 
 # --- Column 1: Average Price Time Series Chart ---
 with col_viz_1:
