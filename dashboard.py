@@ -35,7 +35,7 @@ numeric_cols = [
     '12m%Change'  # Add this
 ]
 
-    for col in numeric_cols:
+for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
 
