@@ -231,7 +231,7 @@ def send_message(user_message: str, chat_history: list) -> str:
         "history": chat_history  # optional, for context
     }
     try:
-        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=30)
+        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=120)
         response.raise_for_status()
         data = response.json()
         return data.get("output", "No response received.")  # adjust key to match your n8n output
