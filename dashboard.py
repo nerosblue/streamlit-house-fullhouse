@@ -106,7 +106,7 @@ latest_data_row = latest_data_rows.iloc[0]
 
 # --- Main Dashboard Content ---
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
-st.markdown("This is the historic price change over time up to November 2025")
+st.markdown("This is the historic price change over time up to Febuary 2026")
 
 # Three columns
 col_viz_1, col_viz_2, col_metrics_3 = st.columns([2, 1.5, 1])
