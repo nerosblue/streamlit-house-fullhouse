@@ -207,7 +207,8 @@ fig_volume = px.bar(
     width=1200,   # Increase width in pixels
     height=800,   # Increase height in pixels
     margin=dict(l=20, r=20, t=50, b=20), # Tighten the margins (Left, Right, Top, Bottom)
-    ) )
+    )
+)
 
 st.plotly_chart(fig_volume, use_container_width=True)
 # --- Footer ---
