@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     """Loads and preprocesses the UK HPI data."""
-    df = pd.read_excel("MCRDatasetFin.xlsx")
+    df = pd.read_csv("MCRActualFull2026.csv")
 
     # Convert Date into datetime objects, coerce errors to NaT
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
