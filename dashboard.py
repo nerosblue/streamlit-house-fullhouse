@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import date
+import requests
 
 # --- Opening Page ---
 st.set_page_config(
@@ -219,3 +220,51 @@ st.plotly_chart(fig_volume, use_container_width=True)
 # --- Footer ---
 st.markdown("---")
 st.caption(f"Showing data for: {selected_region}. Filter the time period using the sidebar.")
+
+
+#n8n connection
+N8N_WEBHOOK_URL = "http://localhost:5678/webhook-test/n8nagent"
+
+def send_message(user_message: str, chat_history: list) -> str:
+    payload = {
+        "message": user_message,
+        "history": chat_history  # optional, for context
+    }
+    try:
+        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("output", "No response received.")  # adjust key to match your n8n output
+    except requests.exceptions.Timeout:
+        return "Request timed out. Please try again."
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+# --- Chat UI ---
+st.title("AI Assistant")
+
+# Initialise chat history in session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Render existing messages
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# Handle new input
+if prompt := st.chat_input("Ask me anything..."):
+
+    # Show user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Get and show agent response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            reply = send_message(prompt, st.session_state.messages)
+        st.markdown(reply)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
