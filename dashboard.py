@@ -55,27 +55,31 @@ all_regions = sorted(df['RegionName'].unique())
 st.sidebar.header("Navigation Tab - Filter by region")
 st.sidebar.subheader("Morning Davida")
 
-# 1. Region Dropdown
-default_region = (
-    'Greater Manchester' if 'Greater Manchester' in all_regions
-    else (all_regions[0] if all_regions else 'No Region')
-)
-selected_region = st.sidebar.selectbox(
-    "Select City to Analyse:",
-    options=all_regions,
-    index=all_regions.index(default_region) if default_region in all_regions else 0
-)
-
-# 2. Time Period Selection
-min_date = df['Date'].min().date()
-max_date = df['Date'].max().date()
-
+# Date input FIRST (higher up = more room below)
 date_range = st.sidebar.date_input(
     "Select Time Period:",
     value=(min_date, max_date),
     min_value=min_date,
     max_value=max_date
 )
+
+# Region dropdown second
+selected_region = st.sidebar.selectbox(
+    "Select City to Analyse:",
+    options=all_regions,
+    index=all_regions.index(default_region) if default_region in all_regions else 0
+)
+
+# 1. Region Dropdown
+default_region = (
+    'Greater Manchester' if 'Greater Manchester' in all_regions
+    else (all_regions[0] if all_regions else 'No Region')
+)
+
+# 2. Time Period Selection
+min_date = df['Date'].min().date()
+max_date = df['Date'].max().date()
+
 
 # Ensure date_range has two elements
 if len(date_range) == 2:
