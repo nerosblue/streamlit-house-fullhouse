@@ -193,7 +193,16 @@ with col_metrics_3:
     else:
         st.metric(label="Avg. First Time Buyer Price", value="N/A")
 
+fig_volume = px.bar(
+    filtered_df.dropna(subset=['SalesVolume']),
+    x='Date',
+    y='SalesVolume',
+    title='Monthly Sales Volume',
+    labels={'SalesVolume': 'Number of Sales', 'Date': 'Date'},
+    template="plotly_white"
+)
 
+st.plotly_chart(fig_volume, use_container_width=True)
 # --- Footer ---
 st.markdown("---")
 st.caption(f"Showing data for: {selected_region}. Filter the time period using the sidebar.")
