@@ -195,13 +195,15 @@ with col_metrics_3:
 
 # barchart to show monthly sales
 fig_volume = px.bar(
-    filtered_df.dropna(subset=['SalesVolume']),
+    filtered_df.dropna(subset=['SalesVolume']).assign(
+        Date=filtered_df['Date'].dt.strftime('%b %Y')  # Converts to "Jan 2023" format
+    ),
     x='Date',
     y='SalesVolume',
     title='Monthly Sales Volume',
     labels={'SalesVolume': 'Number of Sales', 'Date': 'Date'},
     template="plotly_white",
-    color='SalesVolume',                        # Colour bars by volume value
+    color='SalesVolume',
     color_continuous_scale='Blues'
 )
 
