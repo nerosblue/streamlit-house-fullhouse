@@ -5,26 +5,19 @@ import plotly.graph_objects as go
 from datetime import date
 import requests
 
-# --- Opening Page ---
+#starting page
 st.set_page_config(
     page_title="Manchester House Price Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# --- Data Loading and Preprocessing ---
 @st.cache_data
 def load_data():
     """Loads and preprocesses the UK HPI data."""
     df = pd.read_csv("MCRActualFull2026.csv")
-
-    # Convert Date into datetime objects, coerce errors to NaT
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
-
-    # Drop rows where Date or RegionName is missing
     df = df.dropna(subset=['Date', 'RegionName'])
 
-    # Ensure necessary columns are numeric, coercing errors to NaN
     numeric_cols = [
         'AveragePrice',
         'SemiDetachedPrice',
@@ -40,7 +33,6 @@ def load_data():
 
     return df
 
-
 data_load_state = st.text('Loading your data...')
 
 try:
@@ -51,13 +43,12 @@ except Exception as e:
     st.stop()
 
 
-# --- Sidebar: Navigation & Filtering ---
+#----------------------------------------------- Navigation Bar ----------------------------------------------------------
 all_regions = sorted(df['RegionName'].unique())
-
 st.sidebar.header("Navigation Tab - Filter by region")
 st.sidebar.subheader("Morning Davida")
 
-# 1. Region Dropdown
+# nanchester dropdown
 default_region = (
     'Greater Manchester' if 'Greater Manchester' in all_regions
     else (all_regions[0] if all_regions else 'No Region')
@@ -68,7 +59,7 @@ selected_region = st.sidebar.selectbox(
     index=all_regions.index(default_region) if default_region in all_regions else 0
 )
 
-# 2. Time Period Selection
+# date and time selection - needs fixing
 min_date = df['Date'].min().date()
 max_date = df['Date'].max().date()
 
@@ -79,7 +70,6 @@ date_range = st.sidebar.date_input(
     max_value=max_date
 )
 
-# Ensure date_range has two elements
 if len(date_range) == 2:
     start_date = pd.to_datetime(date_range[0])
     end_date = pd.to_datetime(date_range[1])
@@ -87,15 +77,14 @@ else:
     start_date = pd.to_datetime(min_date)
     end_date = pd.to_datetime(max_date)
 
-
-# --- Data Filtering ---
+# data filtering
 filtered_df = df[
     (df['RegionName'] == selected_region) &
     (df['Date'] >= start_date) &
     (df['Date'] <= end_date)
 ].sort_values(by='Date')
 
-# Get latest available data row
+# get latest available data row
 latest_date = filtered_df['Date'].max()
 latest_data_rows = filtered_df[filtered_df['Date'] == latest_date]
 
@@ -106,14 +95,14 @@ if filtered_df.empty or latest_data_rows.empty:
 latest_data_row = latest_data_rows.iloc[0]
 
 
-# --- Main Dashboard Content ---
+#----------------------------------------------- Main Dashboard  ----------------------------------------------------------
 st.title(f"HomeAgent Dashboard Home for {selected_region}")
 st.markdown("This is the historic price change over time up to November 2025")
 
 # --- Row 1: Two Charts ---
 col_viz_1, col_viz_2 = st.columns([2, 1.5])
 
-# Column 1: Average Price Time Series Chart
+#----------------------------------------------- Average time series chart  ----------------------------------------------------------
 with col_viz_1:
     st.subheader("Price Trend Over Time")
 
@@ -129,7 +118,7 @@ with col_viz_1:
     fig_price.update_layout(hovermode="x unified", title_font_size=16)
     st.plotly_chart(fig_price, use_container_width=True)
 
-# Column 2: House Type Prices Bar Chart
+#----------------------------------------------- House types: bar charts  ----------------------------------------------------------
 with col_viz_2:
     st.subheader("House type prices over time")
 
@@ -160,22 +149,22 @@ with col_viz_2:
         st.info("House type data (Semi-Detached, Terraced, Flat) is not available for the latest selected date.")
 
 
-# --- Row 2: Key Metrics ---
+#----------------------------------------------- Key 3 metrics  ----------------------------------------------------------
 st.subheader("First Time Buyer Key Price Metrics")
 st.markdown(f"**Data for: {latest_date.strftime('%B %Y')}**")
 st.markdown("---")
 
 col_met_1, col_met_2, col_met_3 = st.columns(3)
 
-# Metric 1: Latest Average Price
+# M1: Latest Average Price
 with col_met_1:
     latest_price = latest_data_row['AveragePrice']
     if not pd.isna(latest_price):
         st.metric(label="Average Price (All Types)", value=f"£{latest_price:,.0f}")
     else:
-        st.metric(label="Average Price (All Types)", value="N/A")
+        st.metric(label="Average Price (All Types)", value="n/a")
 
-# Metric 2: Latest 12-Month Change
+# M2: Latest 12-Month Change
 with col_met_2:
     annual_change = latest_data_row['12m%Change']
     if not pd.isna(annual_change):
@@ -187,9 +176,9 @@ with col_met_2:
             delta_color="normal" if annual_change < 0 else "inverse"
         )
     else:
-        st.metric(label="Annual Price Change (12m%)", value="N/A")
+        st.metric(label="Annual Price Change (12m%)", value="n/a")
 
-# Metric 3: First Time Buyer Price
+# M3: First Time Buyer Price
 with col_met_3:
     ftb_price = latest_data_row['FTBPrice']
     if not pd.isna(ftb_price):
@@ -198,10 +187,9 @@ with col_met_3:
         st.metric(label="Avg. First Time Buyer Price", value="N/A")
 
 
-# --- Row 3: Sales Volume Bar Chart ---
+#----------------------------------------------- Monthly sales graph heatmap ---------------------------------------------------------
 st.markdown("---")
 st.subheader("Monthly Sales Volume")
-
 fig_volume = px.bar(
     filtered_df.dropna(subset=['SalesVolume']).assign(
         Date=filtered_df['Date'].dt.strftime('%b %Y')
@@ -217,46 +205,43 @@ fig_volume = px.bar(
 st.plotly_chart(fig_volume, use_container_width=True)
 
 
-# --- Footer ---
+#----------------------------------------------- Footer ----------------------------------------------------------
 st.markdown("---")
 st.caption(f"Showing data for: {selected_region}. Filter the time period using the sidebar.")
 
 
-#n8n connection
+#----------------------------------------------- n8n webhook  ----------------------------------------------------------
 N8N_WEBHOOK_URL = "https://kindred-rupture-onstage.ngrok-free.dev/webhook/nathanagent"
 
 def send_message(user_message: str, chat_history: list) -> str:
     payload = {
         "message": user_message,
-        "history": chat_history  # optional, for context
+        "history": chat_history
     }
     try:
         response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=120)
         response.raise_for_status()
         data = response.json()
-        return data.get("output", "No response received.")  # adjust key to match your n8n output
+        return data.get("output", "No response")
     except requests.exceptions.Timeout:
         return "Request timed out. Please try again."
     except Exception as e:
         return f"Error: {str(e)}"
 
-
-# --- Chat UI ---
+#----------------------------------------------- HomeAgent AI  ----------------------------------------------------------
 st.title("Homeagent AI")
 
-# Initialise chat history in session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Render existing messages
+# Chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-
-# Handle new input
+        
 if prompt := st.chat_input("Hi Davida, ask me anything..."):
 
-    # Show user message
+    #user message on dashboard
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -276,7 +261,6 @@ def send_message(user_message: str, chat_history: list) -> str:
         response.raise_for_status()
         try:
             data = response.json()
-            # Try common field names
             return (
                 data.get("output") or
                 data.get("text") or
